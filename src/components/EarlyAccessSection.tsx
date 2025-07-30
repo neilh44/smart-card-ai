@@ -2,20 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckCircle, Gift, Zap, Users, AlertCircle } from "lucide-react";
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client with error handling
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(
-  supabaseUrl || 'https://spllvpofdxpojevcyxfz.supabase.co', 
-  supabaseAnonKey || ''
-);
+import { supabase } from "@/integrations/supabase/client";
 
 const perks = [
   {
@@ -50,13 +37,6 @@ const EarlyAccessSection = () => {
       return;
     }
 
-    // Check if Supabase is configured
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Service configuration error. Please try again later.");
-      console.error('Supabase not configured properly');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -71,13 +51,18 @@ const EarlyAccessSection = () => {
       }
       
       // Prepare data for insertion
-      const insertData: Record<string, any> = {
+      const insertData = {
         email: formData.email.trim().toLowerCase(),
         name: formData.name.trim() || null,
-        source: 'landing_page',
+        source: 'landing_page' as const,
         ip_address: userIP,
         user_agent: navigator.userAgent,
-        created_at: new Date().toISOString()
+        utm_source: null as string | null,
+        utm_medium: null as string | null,
+        utm_campaign: null as string | null,
+        referrer_url: null as string | null,
+        landing_page_url: null as string | null,
+        device_type: null as string | null
       };
 
       // Add UTM parameters if available
@@ -96,7 +81,7 @@ const EarlyAccessSection = () => {
       // Insert into Supabase
       const { data, error: supabaseError } = await supabase
         .from('waitlist')
-        .insert([insertData])
+        .insert(insertData)
         .select(); // Add select to get the inserted data back
 
       console.log('Supabase response:', { data, error: supabaseError });
