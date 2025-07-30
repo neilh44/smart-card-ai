@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      waitlist: {
+        Row: {
+          created_at: string | null
+          device_type: string | null
+          email: string
+          id: number
+          ip_address: unknown | null
+          landing_page_url: string | null
+          name: string | null
+          referrer_url: string | null
+          source: string | null
+          status: string | null
+          updated_at: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_type?: string | null
+          email: string
+          id?: number
+          ip_address?: unknown | null
+          landing_page_url?: string | null
+          name?: string | null
+          referrer_url?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_type?: string | null
+          email?: string
+          id?: number
+          ip_address?: unknown | null
+          landing_page_url?: string | null
+          name?: string | null
+          referrer_url?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

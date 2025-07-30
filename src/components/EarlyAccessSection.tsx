@@ -71,7 +71,7 @@ const EarlyAccessSection = () => {
       }
       
       // Prepare data for insertion
-      const insertData = {
+      const insertData: Record<string, any> = {
         email: formData.email.trim().toLowerCase(),
         name: formData.name.trim() || null,
         source: 'landing_page',
@@ -121,8 +121,8 @@ const EarlyAccessSection = () => {
         setFormData({ name: "", email: "" });
         
         // Track successful signup (if you have analytics)
-        if (typeof window !== 'undefined' && typeof gtag !== 'undefined') {
-          gtag('event', 'sign_up', {
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'sign_up', {
             method: 'waitlist',
             value: 1
           });
