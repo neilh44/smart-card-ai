@@ -3,17 +3,84 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, ArrowRight, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
+    if (!email) return;
+
+    setIsLoading(true);
+    console.log('Hero form submitting email:', email);
+
+    try {
+      // Get user's IP (with fallback)
+      let userIP = 'unknown';
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const ipData = await response.json();
+        userIP = ipData.ip;
+      } catch (ipError) {
+        console.warn('Could not fetch IP:', ipError);
+      }
+      
+      // Prepare data for insertion
+      const insertData = {
+        email: email.trim().toLowerCase(),
+        name: null,
+        source: 'hero_section' as const,
+        ip_address: userIP,
+        user_agent: navigator.userAgent,
+        utm_source: null as string | null,
+        utm_medium: null as string | null,
+        utm_campaign: null as string | null,
+        referrer_url: null as string | null,
+        landing_page_url: null as string | null,
+        device_type: null as string | null
+      };
+
+      // Add UTM parameters if available
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        insertData.utm_source = urlParams.get('utm_source');
+        insertData.utm_medium = urlParams.get('utm_medium');
+        insertData.utm_campaign = urlParams.get('utm_campaign');
+        insertData.referrer_url = document.referrer || null;
+        insertData.landing_page_url = window.location.href;
+        insertData.device_type = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'mobile' : 'desktop';
+      }
+
+      console.log('Hero form attempting to insert:', insertData);
+      
+      // Insert into Supabase
+      const { data, error: supabaseError } = await supabase
+        .from('waitlist')
+        .insert(insertData)
+        .select();
+
+      console.log('Hero form Supabase response:', { data, error: supabaseError });
+
+      if (supabaseError) {
+        console.error('Hero form Supabase error:', supabaseError);
+        // Still show success to user but log error
+      } else {
+        console.log('Hero form successfully inserted:', data);
+      }
+      
       setIsSubmitted(true);
-      // Integration point for email service
+      setEmail("");
       setTimeout(() => setIsSubmitted(false), 3000);
+    } catch (err) {
+      console.error('Hero form network error:', err);
+      // Still show success to user but log error
+      setIsSubmitted(true);
+      setTimeout(() => setIsSubmitted(false), 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,13 +130,15 @@ const HeroSection = () => {
                 type="submit" 
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90 h-14 px-8 font-semibold transition-smooth hover:scale-105"
-                disabled={isSubmitted}
+                disabled={isSubmitted || isLoading}
               >
                 {isSubmitted ? (
                   <>
                     <Zap className="w-5 h-5 mr-2" />
                     Welcome to 1dot1!
                   </>
+                ) : isLoading ? (
+                  "Joining..."
                 ) : (
                   <>
                     Join 1dot1 Early Access
